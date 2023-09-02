@@ -39,3 +39,7 @@ data
 
 # Env
 .env
+
+# Keys
+private.key
+public.key
