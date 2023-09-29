@@ -9,7 +9,7 @@ import { AnswerFactory } from 'test/factories/make-answer'
 import { QuestionFactory } from 'test/factories/make-question'
 import { StudentFactory } from 'test/factories/make-student'
 
-describe('Edit answer (E2E)', () => {
+describe('Choose question best answer (E2E)', () => {
   let app: INestApplication
   let prisma: PrismaService
   let studentFactory: StudentFactory
@@ -34,7 +34,7 @@ describe('Edit answer (E2E)', () => {
     await app.init()
   })
 
-  test('[PUT] /answers/:id', async () => {
+  test('[PATCH] /answers/:answerId/choose-as-best', async () => {
     const user = await studentFactory.makePrismaStudent()
 
     const accessToken = jwt.sign({ sub: user.id.toString() })
@@ -48,23 +48,22 @@ describe('Edit answer (E2E)', () => {
       authorId: user.id,
     })
 
+    const questionId = question.id.toString()
     const answerId = answer.id.toString()
 
     const response = await request(app.getHttpServer())
-      .put(`/answers/${answerId}`)
+      .patch(`/answers/${answerId}/choose-as-best`)
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        content: 'New answer content',
-      })
+      .send()
 
     expect(response.statusCode).toBe(204)
 
-    const answerOnDatabase = await prisma.answer.findFirst({
+    const questionOnDatabase = await prisma.question.findUnique({
       where: {
-        content: 'New answer content',
+        id: questionId,
       },
     })
 
-    expect(answerOnDatabase).toBeTruthy()
+    expect(questionOnDatabase?.bestAnswerId).toEqual(answerId)
   })
 })
